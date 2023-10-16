@@ -1,8 +1,33 @@
+using Microsoft.Extensions.Options;
+using System.Net.Http;
+using USCHotelsProject.AppSettings;
+using USCHotelsProject.Services;
+using USCHotelsProject.Services.Interfaces;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllersWithViews();
+
+//Register Services
+builder.Services.AddSingleton<IHotelService,HotelService>();
+
+
+//Register AppKeys
+builder.Services.Configure<HotelConfigKeys>(builder.Configuration.GetSection("HotelConfigKeys"));
+
+
+//Register IHttpFactoryClient
+
+builder.Services.AddHttpClient("hotelRapidApi", (serviceProvider, client) =>
+{
+    var settings= serviceProvider.GetRequiredService<IOptions<HotelConfigKeys>>().Value;
+    client.DefaultRequestHeaders.Add("X-RapidAPI-Key", settings.RapidApiKey);
+    client.DefaultRequestHeaders.Add("X-RapidAPI-Host", settings.RapidHostUrl);
+    client.BaseAddress = new Uri(settings.RapidApiBaseUrl);
+});
+
 
 var app = builder.Build();
 
